@@ -16,31 +16,52 @@ function App() {
     const [jsResult, setJsResult] = useState<number | null>(null);
     const [jsTime, setJsTime] = useState<number | null>(null);
 
+    // Initialization of WebAssembly module and fibonacci function
     useEffect(() => {
         initWasm().then((fibonacci) => {
             setFibFn(() => fibonacci);
         });
     }, []);
 
+    // Handles compute with both js and WASM
     const handleCompute = () => {
         const n = parseInt(input);
         if (isNaN(n) || n < 0 || !fibFn) return;
 
-        // Compute with WASM
-        const wasmStart = performance.now();
-        const wasmVal = fibFn(n);
-        const wasmEnd = performance.now();
+        // Dictates the function to run 10 times
+        const runs = 10;
 
+        // Compute with WASM
+        let wasmTotal = 0;
+        let wasmVal = 0;
+        for (let i = 0; i < runs; i++) {
+            const start = performance.now();
+            wasmVal = fibFn(n);
+            const end = performance.now();
+            wasmTotal += (end - start);
+        }
+
+        const wasmAverage = wasmTotal / runs;
         setWasmResult(wasmVal);
-        setWasmTime(wasmEnd - wasmStart);
+        setWasmTime(wasmAverage);
 
         // Compute with JS
-        const jsStart = performance.now();
-        const jsVal = jsFibonacci(n);
-        const jsEnd = performance.now();
+        let jsTotal = 0;
+        let jsVal = 0;
+        for (let i = 0; i < runs; i++) {
+            const start = performance.now();
+            jsVal = jsFibonacci(n);
+            const end = performance.now();
+            jsTotal += (end - start);
+        }
 
+        const jsAverage = jsTotal / runs;
         setJsResult(jsVal);
-        setJsTime(jsEnd - jsStart);
+        setJsTime(jsAverage);
+
+        // logging to the console for testing
+        console.log(`Average WebAssembly time over ${runs} runs for n = ${n}: ${wasmAverage.toFixed(3)} ms`);
+        console.log(`Average JS time over ${runs} runs for n = ${n}: ${jsAverage.toFixed(3)} ms`);
     }
 
     return (
