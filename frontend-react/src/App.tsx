@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
 import { initWasm } from "./wasmBridge";
+import {
+    BarChart,
+    Bar,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    Tooltip,
+    Legend
+} from "recharts";
 
 // Native JS fibonacci function
 function jsFibonacci(n: number): number {
@@ -25,6 +34,7 @@ function App() {
     const [wasmTime, setWasmTime] = useState<number | null>(null);
     const [jsResult, setJsResult] = useState<number | null>(null);
     const [jsTime, setJsTime] = useState<number | null>(null);
+    const [perfData, setPerfData] = useState<{ run: number, n: number, avgWasm: number, avgJs: number }[]>([]);
 
     // Email validation State
     const [email, setEmail] = useState("");
@@ -70,6 +80,16 @@ function App() {
         setJsResult(jsVal);
         setWasmTime(avgWasm);
         setJsTime(avgJs);
+
+        setPerfData(prev => [
+            ...prev,
+            {
+                run: prev.length + 1,
+                n,
+                avgWasm: parseFloat(avgWasm.toFixed(3)),
+                avgJs: parseFloat(avgJs.toFixed(3))
+            }
+        ]);
 
         // logging to the console for testing
         console.log(`Average WebAssembly time over ${runs} runs for n = ${n}: ${avgWasm.toFixed(3)} ms`);
@@ -143,6 +163,25 @@ function App() {
                             <p>Native JS: {jsResult} (avg: {jsTime?.toFixed(3)} ms)</p>
                         </div>
                     )}
+                    
+                    <button onClick={() => setPerfData([])}>Reset Chart</button>
+
+                    {perfData.length > 0 && (
+                        <div style={{ marginTop: "2rem" }}>
+                            <h3>Performance Chart</h3>
+                                <BarChart width={600} height={300} data={perfData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="run" />
+                                    <YAxis label={{ value: "Time (ms)", angle: -90, position: 'insideLeft' }} />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="avgJs" fill="#8884d8" name="JS Time (ms)" />
+                                    <Bar dataKey="avgWasm" fill="#82ca9d" name="WASM Time (ms)" />
+                                </BarChart>
+                        </div>
+                    )}
+                    
+
                 </div>
             )}
 
