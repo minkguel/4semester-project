@@ -4,6 +4,6 @@ export async function initWasm() {
     await init();
     return {
         fibonacci: wasm.fibonacci,
-        validate_email: wasm.validate_email,
+        calculate_age: wasm.calculate_age,
     };
 }

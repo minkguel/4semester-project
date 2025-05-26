@@ -16,16 +16,18 @@ function jsFibonacci(n: number): number {
     return jsFibonacci(n - 1) + jsFibonacci(n - 2);
 }
 
-// Native JS email validation
-function jsValidateEmail(email: string): boolean {
-    const re = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-    return re.test(email);
+// Native JS age calculation function
+function jsCalculateAge(birthYear: any): string {
+    // Intentionally using 'any' to demonstrate JavaScript's lack of type safety
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - birthYear;
+    return `You are ${age} years old`;
 }
 
 function App() {
     const [fibFn, setFibFn] = useState<(n: number) => number>();
-    const [validateEmailFn, setValidateEmailFn] = useState<(email: string) => boolean>();
-    const [mode, setMode] = useState<"fibonacci" | "email">("fibonacci");
+    const [calcAgeFn, setCalcAgeFn] = useState<(birthYear: number) => string>();
+    const [mode, setMode] = useState<"fibonacci" | "age">("fibonacci");
 
     // Fibonacci State
     const [runs, setRuns] = useState("10");
@@ -36,16 +38,16 @@ function App() {
     const [jsTime, setJsTime] = useState<number | null>(null);
     const [perfData, setPerfData] = useState<{ run: number, n: number, avgWasm: number, avgJs: number }[]>([]);
 
-    // Email validation State
-    const [email, setEmail] = useState("");
-    const [jsValid, setJsValid] = useState<boolean | null>(null);
-    const [wasmValid, setWasmValid] = useState<boolean | null>(null);
+    // Age state
+    const [birthYear, setBirthYear] = useState("");
+    const [jsAge, setJsAge] = useState<string | null>(null);
+    const [wasmAge, setWasmAge] = useState<string | null>(null);
 
     // Loading WASM functions
     useEffect(() => {
     initWasm().then((exports) => {
         setFibFn(() => exports.fibonacci);
-        setValidateEmailFn(() => exports.validate_email);
+        setCalcAgeFn(() => exports.calculate_age);
         });
     }, []);
 
@@ -96,16 +98,28 @@ function App() {
         console.log(`Average JS time over ${runs} runs for n = ${n}: ${avgJs.toFixed(3)} ms`);
     }
 
-    // Handles email validation
-    const handleValidateEmail = () => {
-        if (!validateEmailFn) return;
-        const jsVal = jsValidateEmail(email);
-        const wasmVal = validateEmailFn(email);
+    // Handles age calculation
+    const handleCalculateAge = () => {
+        const parsed = parseInt(birthYear);
+        if (isNaN(parsed)) {
+            setJsAge("Invalid input");
+            setWasmAge("Invalid input");
+            return;
+        }
 
-        setJsValid(jsVal);
-        setWasmValid(wasmVal);
+        try {
+            setJsAge(jsCalculateAge(parsed));
+        } catch (err) {
+            setJsAge("JS error: " + err);
+        }
 
-        console.log("JS valid:", jsVal, "WebAssembly valid:", wasmVal);
+        try {
+            if (!calcAgeFn) return;
+            const result = calcAgeFn(parsed);
+            setWasmAge(result);
+        } catch (err: any) {
+            setWasmAge("WASM error: " + err);
+        } 
     };
 
     return (
@@ -124,12 +138,12 @@ function App() {
                     Fibonacci
                 </button>
                 <button
-                    onClick={() => setMode("email")}
+                    onClick={() => setMode("age")}
                     style={{
-                        backgroundColor: mode === "email" ? "#ccc" : "#eee"
+                        backgroundColor: mode === "age" ? "#ccc" : "#eee"
                     }}
                 >
-                    Email Validation
+                    Age calculation
                 </button>
             </div>
 
@@ -185,23 +199,23 @@ function App() {
                 </div>
             )}
 
-            {/* Email Validation Section */}
-            {mode === "email" && (
+            {/* Age calculation section */}
+            {mode === "age" && (
                 <div>
-                    <h2>Email Validation</h2>
+                    <h2>Age calculation</h2>
                     <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter an email address"
+                        type="text"
+                        value={birthYear}
+                        onChange={(e) => setBirthYear(e.target.value)}
+                        placeholder="Enter birth year"
                         style={{ marginRight: "1rem" }}
                     />
-                    <button onClick={handleValidateEmail}>Validate Email</button>
+                    <button onClick={handleCalculateAge}>Calculate age</button>
 
-                    {jsValid !== null && wasmValid !== null && (
+                    {jsAge !== null && wasmAge !== null && (
                         <div style={{ marginTop: "1rem" }}>
-                            <p>JavaScript: {jsValid ? "Valid" : " Invalid"}</p>
-                            <p>WASM (Rust): {wasmValid ? "Valid" : " Invalid"}</p>
+                            <p>JavaScript: {jsAge}</p>
+                            <p>WASM (Rust): {wasmAge}</p>
                         </div>
                     )}
                 </div>

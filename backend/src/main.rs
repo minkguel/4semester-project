@@ -1,6 +1,7 @@
 use axum::{routing::get, Router};
 use std::net::SocketAddr;
 
+// For testing in Native Rust
 fn fibonacci(n: u32) -> u32 {
     match n {
         0 => 0,
