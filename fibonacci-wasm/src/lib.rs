@@ -1,5 +1,4 @@
 use wasm_bindgen::prelude::*;
-use regex::Regex;
 
 #[wasm_bindgen]
 pub fn fibonacci(n: u32) -> u32 {
@@ -11,7 +10,12 @@ pub fn fibonacci(n: u32) -> u32 {
 }
 
 #[wasm_bindgen]
-pub fn validate_email(email: &str) -> bool {
-    let re = Regex::new(r"^[^@\s]+@[^@\s]+\.[^@\s]+$").unwrap();
-    re.is_match(email)
+pub fn calculate_age(birth_year: u16) -> Result<String, JsValue> {
+    let current_year = 2025;
+    if birth_year > current_year {
+        return Err(JsValue::from_str("Birth year cant be in the future"));
+    }
+
+    let age = current_year - birth_year;
+    Ok(format!("You are {} years old", age))
 }
